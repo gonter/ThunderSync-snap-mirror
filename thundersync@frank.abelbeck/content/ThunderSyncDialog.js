@@ -670,7 +670,10 @@ var ThunderSyncDialog = {
 			// get next item in list; skip if it's not an addressbook
 			var addressBook = allAddressBooks.getNext();
 			if (!(addressBook instanceof Components.interfaces.nsIAbDirectory) || addressBook.isMailList) { continue; }
-			var abName = addressBook.fileName.replace(".mab","");
+			//  var abName = addressBook.fileName.replace(".mab","");
+			var abName = addressBook.fileName
+			if (abName == null) continue;
+                        abName= abName.replace(".mab","");
 			
 			// fetch desired path of addressbook from preferences
 			// if this fails, no path was configured: skip addressbook

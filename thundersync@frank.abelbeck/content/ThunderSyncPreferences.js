@@ -71,13 +71,20 @@ var ThunderSyncPref = {
 		// read all addressbooks, fill list in preferences dialog
 		//
 		var abManager = Components.classes["@mozilla.org/abmanager;1"].getService(Components.interfaces.nsIAbManager);
+		// var abManager = Components.classes["@mozilla.org/abmanager;1"].getService(Components.interfaces.nsIAbMDBDirectory);
 		var allAddressBooks = abManager.directories;
 		var ablist = document.getElementById("ThunderSyncPreferences.list.addressbook");
+
 		while (allAddressBooks.hasMoreElements()) {
 			var addressBook = allAddressBooks.getNext();
+
 			if (addressBook instanceof Components.interfaces.nsIAbDirectory)
 			{
-				var fileName = addressBook.fileName.replace(".mab","");
+				//var fileName = addressBook.fileName.replace(".mab","");
+				var fileName = addressBook.fileName;
+if (fileName == null) continue;
+				fileName = fileName.replace(".mab","");
+
 				var item = document.createElementNS(
 					"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
 					"listitem"
@@ -86,7 +93,8 @@ var ThunderSyncPref = {
 				item.setAttribute("label",addressBook.dirName);
 				item.setAttribute("value",fileName);
 				item.setAttribute("class","ThunderSyncPreferences.listitem.addressbookname");
-				
+ablist.appendChild(item);
+
 				//
 				// store addressbook preferences
 				//
