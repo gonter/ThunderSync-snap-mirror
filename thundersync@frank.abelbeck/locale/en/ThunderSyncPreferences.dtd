@@ -1,0 +1,120 @@
+<!--
+Copyright (C) 2011 Frank Abelbeck <frank.abelbeck@googlemail.com>
+
+This file is part of the Mozilla Thunderbird extension "ThunderSync."
+
+ThunderSync is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+ThunderSync is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with ThunderSync; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+or see <http://www.gnu.org/licenses/>.
+
+$Id: ThunderSyncPreferences.dtd 35 2012-01-19 20:51:53Z frank $
+-->
+
+<!ENTITY ThunderSyncPreferences.title "ThunderSync Settings">
+<!ENTITY ThunderSyncPreferences.dialog.title "Synchronisation Preferences">
+
+<!ENTITY ThunderSyncPreferences.tab.general "General">
+<!ENTITY ThunderSyncPreferences.tab.format "Export Format">
+<!ENTITY ThunderSyncPreferences.tab.filter "Filter">
+
+<!ENTITY ThunderSyncPreferences.label.path "External resource">
+<!ENTITY ThunderSyncPreferences.button.clearPath "Clear">
+<!ENTITY ThunderSyncPreferences.button.choosePath "Choose...">
+<!ENTITY ThunderSyncPreferences.button.chooseFile "File">
+<!ENTITY ThunderSyncPreferences.button.chooseDir "Directory">
+<!ENTITY ThunderSyncPreferences.button.chooseIMAPMsg "IMAP message">
+<!ENTITY ThunderSyncPreferences.button.chooseIMAPFolder "IMAP folder">
+
+<!ENTITY ThunderSyncPreferences.addressbook "Addressbook">
+
+<!ENTITY ThunderSyncPreferences.label.format "Export format">
+<!ENTITY ThunderSyncPreferences.format.vcard "vCard v2.1 (*.vcf)">
+<!ENTITY ThunderSyncPreferences.format.vCardDir "vCard v2.1 (*.vcf, files in a directory)">
+<!ENTITY ThunderSyncPreferences.format.vCardFile "vCard v2.1 (*.vcf, single file)">
+
+<!ENTITY ThunderSyncPreferences.label.importEncoding "File charset (Import)">
+<!ENTITY ThunderSyncPreferences.label.exportEncoding "File charset (Export)">
+
+<!ENTITY ThunderSyncPreferences.encoding.standard "vCard standard">
+
+<!ENTITY ThunderSyncPreferences.encoding.iso88591 "Western European (ISO 8859-1)">
+<!ENTITY ThunderSyncPreferences.encoding.iso88592 "Central European (ISO 8859-2)">
+<!ENTITY ThunderSyncPreferences.encoding.iso88593 "South European (ISO 8859-3)">
+<!ENTITY ThunderSyncPreferences.encoding.iso88594 "North European (ISO 8859-4)">
+<!ENTITY ThunderSyncPreferences.encoding.iso88595 "Cyrillic (ISO 8859-5)">
+<!ENTITY ThunderSyncPreferences.encoding.iso88596 "Arabic (ISO 8859-6)">
+<!ENTITY ThunderSyncPreferences.encoding.iso88597 "Greek (ISO 8859-7)">
+<!ENTITY ThunderSyncPreferences.encoding.iso88598 "Hebrew (ISO 8859-8)">
+<!ENTITY ThunderSyncPreferences.encoding.iso88599 "Turkish (ISO 8859-9)">
+<!ENTITY ThunderSyncPreferences.encoding.iso885910 "Nordic (ISO 8859-10)">
+<!ENTITY ThunderSyncPreferences.encoding.iso885911 "Thai (ISO 8859-11)">
+<!ENTITY ThunderSyncPreferences.encoding.iso885913 "Baltic (ISO 8859-13)">
+<!ENTITY ThunderSyncPreferences.encoding.iso885914 "Celtic (ISO 8859-14)">
+<!ENTITY ThunderSyncPreferences.encoding.iso885915 "Western Europe +Euro (ISO 8859-15)">
+<!ENTITY ThunderSyncPreferences.encoding.iso885916 "South-Eastern European (ISO 8859-16)">
+
+<!ENTITY ThunderSyncPreferences.encoding.windows874 "Thai (Windows-874)">
+<!ENTITY ThunderSyncPreferences.encoding.windows932 "Japanese (Windows-932)">
+<!ENTITY ThunderSyncPreferences.encoding.windows936 "Chinese, simplified (Windows-936)">
+<!ENTITY ThunderSyncPreferences.encoding.windows949 "Korean (Windows-949)">
+<!ENTITY ThunderSyncPreferences.encoding.windows950 "Chinese, traditional (Windows-950)">
+<!ENTITY ThunderSyncPreferences.encoding.windows1250 "Central European (Windows-1250)">
+<!ENTITY ThunderSyncPreferences.encoding.windows1251 "Cyrillic (Windows-1251)">
+<!ENTITY ThunderSyncPreferences.encoding.windows1252 "Western European (Windows-1252)">
+<!ENTITY ThunderSyncPreferences.encoding.windows1253 "Greek (Windows-1253)">
+<!ENTITY ThunderSyncPreferences.encoding.windows1254 "Turkish (Windows-1254)">
+<!ENTITY ThunderSyncPreferences.encoding.windows1255 "Hebrew (Windows-1255)">
+<!ENTITY ThunderSyncPreferences.encoding.windows1256 "Arabic (Windows-1256)">
+<!ENTITY ThunderSyncPreferences.encoding.windows1257 "Baltic (Windows-1257)">
+<!ENTITY ThunderSyncPreferences.encoding.windows1258 "Vietnamese (Windows-1258)">
+
+<!ENTITY ThunderSyncPreferences.encoding.utf8 "Unicode (UTF-8)">
+
+<!ENTITY ThunderSyncPreferences.label.syncOnStartUp "Start-up action">
+<!ENTITY ThunderSyncPreferences.label.syncMode "Standard action">
+<!ENTITY ThunderSyncPreferences.label.syncOnShutdown "Shutdown action">
+
+<!ENTITY ThunderSyncPreferences.label.advancedOptions "Options for Advanced Users">
+<!ENTITY ThunderSyncPreferences.label.UID "Additionally encode UID as Mozilla property">
+<!ENTITY ThunderSyncPreferences.label.quotedPrintable "Use quoted-printable encoding (default value: activated)">
+<!ENTITY ThunderSyncPreferences.label.folding "Fold long lines (default value: activated)">
+<!ENTITY ThunderSyncPreferences.label.warning "Warning! The next two preferences should only be changed if third-party software cannot process quoted-printable encoding and/or line folding!">
+
+<!ENTITY ThunderSyncPreferences.autoSync.no "No synchronisation">
+<!ENTITY ThunderSyncPreferences.autoSync.export "Export from Thunderbird">
+<!ENTITY ThunderSyncPreferences.autoSync.import "Import in Thunderbird">
+<!ENTITY ThunderSyncPreferences.autoSync.ask "Interactive synchronisation">
+
+<!ENTITY ThunderSyncPreferences.property "Property">
+<!ENTITY ThunderSyncPreferences.action "Action">
+
+<!ENTITY ThunderSyncPreferences.filterAction.ignore "Ignore">
+<!ENTITY ThunderSyncPreferences.filterAction.import "Import into addressbook">
+<!ENTITY ThunderSyncPreferences.filterAction.export "Export from addressbook">
+<!ENTITY ThunderSyncPreferences.filterAction.ask "Ask">
+<!ENTITY ThunderSyncPreferences.filterAction.clear "Reset">
+
+<!ENTITY ThunderSyncPreferences.IMAP.title "ThunderSync IMAP Preferences">
+<!ENTITY ThunderSyncPreferences.IMAP.dialog.title "IMAP Selector">
+<!ENTITY ThunderSyncPreferences.IMAP.description "The following messages were identified by ThunderSync as possible resources:">
+<!ENTITY ThunderSyncPreferences.IMAP.accounts "IMAP Accounts">
+
+<!ENTITY ThunderSyncPreferences.IMAP.path "Account/Folder">
+<!ENTITY ThunderSyncPreferences.IMAP.date "Date">
+<!ENTITY ThunderSyncPreferences.IMAP.attachment "Attachment">
+<!ENTITY ThunderSyncPreferences.IMAP.size "Size">
+<!ENTITY ThunderSyncPreferences.IMAP.subject "Subject">
+
+<!ENTITY ThunderSyncPreferences.button.fixfoto  "Remove unused photo files from profile directory">
+
