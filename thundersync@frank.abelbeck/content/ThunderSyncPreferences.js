@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  * or see <http://www.gnu.org/licenses/>.
  *
- * $Id: ThunderSyncPreferences.js 44 2013-06-13 17:56:18Z frank $
+ * $Id: ThunderSyncPreferences.js 50 2013-11-04 21:48:23Z frank $
  */
 
 var ThunderSyncPref = {
@@ -618,7 +618,7 @@ var ThunderSyncPref = {
 		} else {
 			if (this.ConfigPath[this.aBook].length > 0) {
 				var curFile = Components.classes["@mozilla.org/file/local;1"]
-						.createInstance(Components.interfaces.nsILocalFile);
+						.createInstance(Components.interfaces.nsIFile);
 				try {
 					curFile.initWithPath(this.ConfigPath[this.aBook]);
 					fp.displayDirectory = curFile.parent;

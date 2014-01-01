@@ -13,6 +13,7 @@ updates:
 
 - 2012-12-13 44d6fcf18585eb38cf8ccf1b6b8aa136  thundersync@frank.abelbeck.xpi
 - 2014-01-01 88872c071d93de5738eb2fe9072cb315  tmp/thundersync-2.2b-tb.xpi
+- 2014-01-01 404bb865c3771151e739c274864cf092  tmp/thundersync-2.2.1b-tb.xpi
 
 References:
 -----------

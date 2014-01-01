@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------
 ThunderSync, a Mozilla Thunderbird v3 extension
-$Id: README 42 2013-06-04 22:22:09Z frank $
+$Id: README 51 2013-11-04 21:51:17Z frank $
 --------------------------------------------------------------------------------
 
 Copyright (C) 2012 Frank Abelbeck <frank.abelbeck@googlemail.com>
@@ -177,3 +177,10 @@ Changelog:
    - handling of masked semi-colons corrected
    - correction: property names are now case-insensitive
    - under construction: debugging of mailing lists
+
+2.2 beta (2013-06-27)
+   - reworked sync algorithm
+
+2.2.1 beta (2013-11-04)
+   - fixed bug concerning non-existent files
+

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  * or see <http://www.gnu.org/licenses/>.
  *
- * $Id: ThunderSyncVCardLib.js 47 2013-06-27 20:31:31Z frank $
+ * $Id: ThunderSyncVCardLib.js 49 2013-11-04 21:28:30Z frank $
  */
 
 var ThunderSyncVCardLib = {
@@ -394,9 +394,13 @@ var ThunderSyncVCardLib = {
 				// e-mail
 				//
 				case "PrimaryEmail":
+					value = String(property.value);
+					if (value != "") { vcfstr += "EMAIL;TYPE=INTERNET;PRIMARY:" + value + this.CRLF; }
+					break;
+				
 				case "SecondEmail":
 					value = String(property.value);
-					if (value != "") { vcfstr += "EMAIL;TYPE=INTERNET:" + value + this.CRLF; }
+					if (value != "") { vcfstr += "EMAIL;TYPE=INTERNET;SECONDARY:" + value + this.CRLF; }
 					break;
 				//
 				// home address
@@ -978,13 +982,10 @@ var ThunderSyncVCardLib = {
 					card.setProperty(teltype,value[0]);
 					break;
 				case "EMAIL":
-					if (value[0] != "") {
-						if (card.getProperty("PrimaryEmail","") == "") {
-							card.setProperty("PrimaryEmail",value[0]);
-						}
-						else {
-							card.setProperty("SecondEmail",value[0]);
-						}
+					if (properties["SECONDARY"]) {
+						card.setProperty("SecondEmail",value[0]);
+					} else {
+						card.setProperty("PrimaryEmail",value[0]);
 					}
 					break;
 				case "TITLE":
