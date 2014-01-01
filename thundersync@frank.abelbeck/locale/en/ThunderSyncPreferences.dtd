@@ -18,7 +18,7 @@ along with ThunderSync; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 or see <http://www.gnu.org/licenses/>.
 
-$Id: ThunderSyncPreferences.dtd 35 2012-01-19 20:51:53Z frank $
+$Id: ThunderSyncPreferences.dtd 44 2013-06-13 17:56:18Z frank $
 -->
 
 <!ENTITY ThunderSyncPreferences.title "ThunderSync Settings">
@@ -94,6 +94,8 @@ $Id: ThunderSyncPreferences.dtd 35 2012-01-19 20:51:53Z frank $
 <!ENTITY ThunderSyncPreferences.autoSync.no "No synchronisation">
 <!ENTITY ThunderSyncPreferences.autoSync.export "Export from Thunderbird">
 <!ENTITY ThunderSyncPreferences.autoSync.import "Import in Thunderbird">
+<!ENTITY ThunderSyncPreferences.autoSync.exportForced "Export from Thunderbird (non-interactive!)">
+<!ENTITY ThunderSyncPreferences.autoSync.importForced "Import in Thunderbird (non-interactive!)">
 <!ENTITY ThunderSyncPreferences.autoSync.ask "Interactive synchronisation">
 
 <!ENTITY ThunderSyncPreferences.property "Property">

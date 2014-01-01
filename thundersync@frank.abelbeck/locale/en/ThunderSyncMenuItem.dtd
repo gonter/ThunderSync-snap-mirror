@@ -18,7 +18,21 @@ along with ThunderSync; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 or see <http://www.gnu.org/licenses/>.
 
-$Id: ThunderSyncMenuItem.dtd 7 2011-01-12 18:34:59Z frank $
+$Id: ThunderSyncMenuItem.dtd 44 2013-06-13 17:56:18Z frank $
 -->
 
-<!ENTITY ThunderSyncMenuItem "Synchronise addressbook...">
+<!ENTITY ThunderSyncMenuBase "ThunderSync">
+<!ENTITY ThunderSyncMenuItem "Synchronise addressbooks...">
+<!ENTITY ThunderSyncMenuItemExport "Export addressbooks...">
+<!ENTITY ThunderSyncMenuItemImport "Import addressbooks...">
+
+<!ENTITY ThunderSyncMenuItemPrefs  "Configure...">
+
+<!ENTITY ThunderSyncDirContextMenuItem       "Synchronise this addressbook...">
+<!ENTITY ThunderSyncDirContextMenuItemExport "Export this addressbook...">
+<!ENTITY ThunderSyncDirContextMenuItemImport "Import this addressbook...">
+
+<!ENTITY ThunderSyncCardContextMenuItem       "Synchronise this contact...">
+<!ENTITY ThunderSyncCardContextMenuItemExport "Export this contact...">
+<!ENTITY ThunderSyncCardContextMenuItemImport "Import this contact...">
+

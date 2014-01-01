@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  * or see <http://www.gnu.org/licenses/>.
  *
- * $Id: ThunderSyncVCardLib.js 37 2012-02-24 17:19:17Z frank $
+ * $Id: ThunderSyncVCardLib.js 47 2013-06-27 20:31:31Z frank $
  */
 
 var ThunderSyncVCardLib = {
@@ -72,7 +72,9 @@ var ThunderSyncVCardLib = {
 		"WorkZipCode", "WorkCountry",
 		"HomePhone", "WorkPhone", "FaxNumber", "CellularNumber", "PagerNumber",
 		"JobTitle", "Department", "Company", "WebPage1", "WebPage2",
-		"BirthYear", "BirthMonth", "BirthDay", "Notes"
+		"BirthYear", "BirthMonth", "BirthDay", "Notes",
+		"_AimScreenName",
+		"_GoogleTalk", "_Yahoo", "_Skype", "_MSN", "_ICQ", "_JabberId" // new since 2012?
 	),
 	
 	// list of photo properties
@@ -82,13 +84,13 @@ var ThunderSyncVCardLib = {
 	otherProperties: new Array(
 		"NickName", "PhoneticFirstName", "PhoneticLastName",
 		"SpouseName", "FamilyName",
-		"AnniversaryDay", "AnniversaryMonth", "AnniversaryYear",
 		"HomePhoneType", "WorkPhoneType", "FaxNumberType",
 		"PagerNumberType", "CellularNumberType",
-		"_AimScreenName",
-		"PopularityIndex", "PreferMailFormat",		// int
-		"AllowRemoteContent",				// bool
-		"Custom1", "Custom2", "Custom3", "Custom4"	// base64?
+		"PopularityIndex", "PreferMailFormat", // int
+		"AllowRemoteContent", // bool
+		"Custom1", "Custom2", "Custom3", "Custom4",	// base64?
+		"_QQ", "_IRC", // new since 2012?
+		"AnniversaryYear", "AnniversaryMonth", "AnniversaryDay"
 	),
 	
 	allProperties: function () {
@@ -294,323 +296,432 @@ var ThunderSyncVCardLib = {
 	 * @return ASCII string with vCard content
 	 */
 	createVCardString: function (card,charset,hideUID,useQPE,doFolding) {
+		//
+		// prepare charset converter and set it to given charset
+		//
 		var converter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
 			.createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
 		converter.charset = charset;
-		var value = "";
-		var tmpstr = "";
-		
+		//
+		// helper function to add leading zero for values smaller 10
+		//
+		function zeropad(n){return n<10 ? '0'+n : n}
 		//
 		// start a new vCard with the BEGIN property
 		//
 		var vcfstr = "BEGIN:VCARD" + this.CRLF + "VERSION:2.1" + this.CRLF;
+		var lastname = "";
+		var firstname = "";
+		var rev = 0;
+		var revdate = new Date();
+		var homeAdr = ["","","","","",""];
+		var workAdr = ["","","","","",""];
+		var department = "";
+		var company = "";
+		var year = "";
+		var month = "";
+		var day = "";
+		var photoURI = "";
+		var photoType = "";
+		var photoName = "";
+		var value = "";
+		var tmpstr = "";
+		var photoStr = "";
+		var photoData = "";
+		var suffice = "";
+		//
+		// 2013-06-05: iterate over properties instead of checking every property
+		//
 		
-		//
-		// revision ("last modified date")
-		//
- 		try {
-			var rev = card.getProperty("LastModifiedDate",0);
-			if (rev > 0) {
-				function zeropad(n){return n<10 ? '0'+n : n}
-				
-				var revdate = new Date(rev*1000);
-				vcfstr += "REV:"
-					+ revdate.getUTCFullYear() + "-"
-					+ zeropad(revdate.getUTCMonth()+1) + "-"
-					+ zeropad(revdate.getUTCDate())    + "T"
-					+ zeropad(revdate.getUTCHours())   + ":"
-					+ zeropad(revdate.getUTCMinutes()) + ":"
-					+ zeropad(revdate.getUTCSeconds()) + "Z"
-					+ this.CRLF;
-			}
- 		}
- 		catch (exception) {}
-		
-		//
-		// name: LastName,FirstName
-		// (compound property value, semicolons have to be escaped)
-		//
-		var lastname  = card.getProperty("LastName","").replace(/;/g,"\\;");
-		var firstname = card.getProperty("FirstName","").replace(/;/g,"\\;");
-		vcfstr += "N;CHARSET="+charset+":"+lastname+";"+firstname+";;;"+this.CRLF;
-		
-		//
-		// display name
-		//
-		value = card.getProperty("DisplayName","");
-		if (value != "") {
-			vcfstr += "FN;CHARSET="+charset+":" + value + this.CRLF;
-		}
-		
-		//
-		// UID
-		//
-		try {
-			value = card.getProperty("UID","");
-			if (value != "") {
-				vcfstr += "UID:" + value + this.CRLF;
-				if (hideUID) {
-					vcfstr += "X-MOZILLA-PROPERTY:UID;"
-						+ value + this.CRLF;
-				}
-			}
-		} catch (exception) {}
-		
-		//
-		// e-mail
-		//
-		value = card.getProperty("PrimaryEmail","");
-		if (value != "") { vcfstr += "EMAIL;TYPE=INTERNET:" + value + this.CRLF; }
-		value = card.getProperty("SecondEmail","");
-		if (value != "") { vcfstr += "EMAIL;TYPE=INTERNET:" + value + this.CRLF; }
-		
-		//
-		// home address
-		//
-		value = card.getProperty("HomeAddress2","").replace(/;/g,"\\;");
-		value += ";" + card.getProperty("HomeAddress","").replace(/;/g,"\\;");
-		value += ";" + card.getProperty("HomeCity","").replace(/;/g,"\\;");
-		value += ";" + card.getProperty("HomeState","").replace(/;/g,"\\;");
-		value += ";" + card.getProperty("HomeZipCode","").replace(/;/g,"\\;");
-		value += ";" + card.getProperty("HomeCountry","").replace(/;/g,"\\;");
-		if (value.length > 5) {
-			vcfstr += "ADR;TYPE=HOME;CHARSET="+ charset +":" + ";" + value + this.CRLF;
-		}
-		
-		//
-		// work address
-		//
-		value = card.getProperty("WorkAddress2","").replace(/;/g,"\\;");
-		value += ";" + card.getProperty("WorkAddress","").replace(/;/g,"\\;");
-		value += ";" + card.getProperty("WorkCity","").replace(/;/g,"\\;");
-		value += ";" + card.getProperty("WorkState","").replace(/;/g,"\\;");
-		value += ";" + card.getProperty("WorkZipCode","").replace(/;/g,"\\;");
-		value += ";" + card.getProperty("WorkCountry","").replace(/;/g,"\\;");
-		if (value.length > 5) {
-			vcfstr += "ADR;TYPE=WORK;CHARSET="+ charset +":" + ";" + value + this.CRLF;
-		}
-		
-		//
-		// phone number, home/work/fax/cell
-		//
-		value = card.getProperty("HomePhone","");
-		if (value != "") { vcfstr += "TEL;HOME;VOICE:" + value + this.CRLF; }
-		value = card.getProperty("WorkPhone","");
-		if (value != "") { vcfstr += "TEL;WORK;VOICE:" + value + this.CRLF; }
-		value = card.getProperty("FaxNumber","");
-		if (value != "") { vcfstr += "TEL;FAX:" + value + this.CRLF; }
-		value = card.getProperty("CellularNumber","");
-		if (value != "") { vcfstr += "TEL;CELL:" + value + this.CRLF; }
-		value = card.getProperty("PagerNumber","");
-		if (value != "") { vcfstr += "TEL;PAGER:" + value + this.CRLF; }
-		
-		//
-		// job title
-		//
-		value = card.getProperty("JobTitle","");
-		if (value != "") { vcfstr += "TITLE;CHARSET="+charset+":" + value + this.CRLF; }
-		
-		//
-		// department
-		//
-		var department = card.getProperty("Department","").replace(/;/g,"\\;");
-		var company = card.getProperty("Company","").replace(/;/g,"\\;");
-		if (department != "" || company != "") {
-			vcfstr += "ORG;CHARSET="+charset+":"
-				+ company + ";"
-				+ department
-				+ this.CRLF;
-		}
-		
-		//
-		// webpages
-		//
-		value = card.getProperty("WebPage1","");
-		if (value != "") { vcfstr += "URL;TYPE=WORK:" + value + this.CRLF; }
-		value = card.getProperty("WebPage2","");
-		if (value != "") { vcfstr += "URL;TYPE=HOME:" + value + this.CRLF; }
-		
-		//
-		// birthday
-		//
-		var year = card.getProperty("BirthYear","");
-		var month = card.getProperty("BirthMonth","");
-		var day = card.getProperty("BirthDay","");
-		if (year.length >= 4 && month.length >= 2 && day.length >= 2) {
-			vcfstr += "BDAY:"
-				+ year.substr(0,4)
-				+ month.substr(0,2)
-				+ day.substr(0,2)
-				+ this.CRLF;
-		}
-		else {
-			// incomplete date: store as X-MOZILLA properties
-			if (year != "") {
-				vcfstr += "X-MOZILLA-PROPERTY:BirthYear;" + year + this.CRLF;
-			}
-			if (month != "") {
-				vcfstr += "X-MOZILLA-PROPERTY:BirthMonth;" + month + this.CRLF;
-			}
-			if (month != "") {
-				vcfstr += "X-MOZILLA-PROPERTY:BirthDay;" + day + this.CRLF;
-			}
-		}
-		
-		//
-		// notes; single value of a contact which might hold a line
-		// break and might create a rather long line if not folded
-		//
-		value = card.getProperty("Notes","");
-		if (value != "") {
-			if (value.indexOf("\n") != -1) {
-				// at least one line break is present: encoding needed
-				if (useQPE) {
-					// the user allows quoted printable: use it
-					tmpstr = "NOTE;CHARSET=" + charset + ";ENCODING=QUOTED-PRINTABLE:";
-					if (doFolding) {
-						// ...and folding is allowed, too!
-						vcfstr += tmpstr + this.foldQuotedPrintable(
-								this.toQuotedPrintable(value),
-								tmpstr.length
-							) + this.CRLF;
-					} else {
-						// ...but don't fold the line
-						vcfstr += tmpstr
-							+ this.toQuotedPrintable(value)
-							+ this.CRLF;
-					}
-				} else {
-					// fall back to base64 encoding
-					tmpstr = "NOTE;CHARSET=" + charset + ";ENCODING=BASE64:"
-					if (doFolding) {
-						// ...and folding is allowed, too!
-						vcfstr += tmpstr + this.foldBase64(
-								window.btoa(value),
-								tmpstr.length
-							) + this.CRLF + this.CRLF;
-					} else {
-						// ...but don't fold the line
-						vcfstr += tmpstr + window.btoa(value) + this.CRLF;
-					}
-				}
-			} else {
-				// encoding not needed
-				if (doFolding) {
-					// ...but we are allowed to fold it!
-					tmpstr = "NOTE;CHARSET=" + charset + ":" + value;
-					vcfstr += this.foldText(tmpstr) + this.CRLF;
-				} else {
-					// ...but don't fold the line
-					vcfstr += "NOTE;CHARSET=" + charset + ":" + value + this.CRLF;
-				}
-			}
-		}
-		
-		for (var i = 0; i < this.otherProperties.length; i++) {
-			value = String(card.getProperty(this.otherProperties[i],"")).replace(/;/g,"\\;");
-			if (value != "") {
-				if (value.indexOf("\n") != -1) {
-					// at least one line break is present: encoding needed
-					if (useQPE) {
-						// the user allows quoted printable: use it
-						tmpstr = "X-MOZILLA-PROPERTY;CHARSET=" + charset
-							+ ";ENCODING=QUOTED-PRINTABLE:"
-							+ this.otherProperties[i] + ";";
-						if (doFolding) {
-							// ...and folding is allowed, too!
-							vcfstr += tmpstr + this.foldQuotedPrintable(
-									this.toQuotedPrintable(value),
-									tmpstr.length
-								) + this.CRLF;
-						} else {
-							// ...but don't fold the line
-							vcfstr += tmpstr
-								+ this.toQuotedPrintable(value)
+		var properties = card.properties;
+		while (properties.hasMoreElements()) {
+			property = properties.getNext();
+			// need to unwrap xpconnect wrapped nsisupports!
+			// query interface, i.e. transform into nsiproperty
+			property.QueryInterface(Components.interfaces.nsIProperty);
+			
+// 			this.logMsg(property.name + " = " + property.value);
+			
+			switch (property.name) {
+				//
+				// revision ("last modified date")
+				//
+				case "LastModifiedDate":
+					try {
+						rev = String(property.value);
+						if (rev > 0) {
+							revdate.setTime(rev*1000)
+							vcfstr += "REV:"
+								+ revdate.getUTCFullYear() + "-"
+								+ zeropad(revdate.getUTCMonth()+1) + "-"
+								+ zeropad(revdate.getUTCDate())    + "T"
+								+ zeropad(revdate.getUTCHours())   + ":"
+								+ zeropad(revdate.getUTCMinutes()) + ":"
+								+ zeropad(revdate.getUTCSeconds()) + "Z"
 								+ this.CRLF;
 						}
-					} else {
-						// fall back to base64 encoding
-						tmpstr = "X-MOZILLA-PROPERTY;CHARSET=" + charset
-							+ ";ENCODING=BASE64:"
-							+ this.otherProperties[i] + ";";
-						if (doFolding) {
-							// ...and folding is allowed, too!
-							vcfstr += tmpstr + this.foldBase64(
-									window.btoa(value),
-									tmpstr.length
-								) + this.CRLF + this.CRLF;
+					}
+					catch (exception) {}
+					break;
+				//
+				// name: LastName,FirstName
+				// (compound property value, semicolons have to be escaped)
+				//
+				case "LastName":
+					lastname = String(property.value).replace(/;/g,"\\;");
+					break;
+				case "FirstName":
+					firstname = String(property.value).replace(/;/g,"\\;");
+					break;
+				//
+				// display name
+				//
+				case "DisplayName":
+					value = String(property.value);
+					if (value != "") { vcfstr += "FN;CHARSET="+charset+":" + value + this.CRLF; }
+					break;
+				//
+				// UID
+				//
+				case "UID":
+					value = String(property.value);
+					if (value != "") {
+						vcfstr += "UID:" + value + this.CRLF;
+						if (hideUID) { vcfstr += "X-MOZILLA-PROPERTY:UID;" + value + this.CRLF; }
+					}
+					break;
+				//
+				// e-mail
+				//
+				case "PrimaryEmail":
+				case "SecondEmail":
+					value = String(property.value);
+					if (value != "") { vcfstr += "EMAIL;TYPE=INTERNET:" + value + this.CRLF; }
+					break;
+				//
+				// home address
+				//
+				case "HomeAddress2":
+					homeAdr[0] = String(property.value).replace(/;/g,"\\;");
+					break;
+				case "HomeAddress":
+					homeAdr[1] = String(property.value).replace(/;/g,"\\;");
+					break;
+				case "HomeCity":
+					homeAdr[2] = String(property.value).replace(/;/g,"\\;");
+					break;
+				case "HomeState":
+					homeAdr[3] = String(property.value).replace(/;/g,"\\;");
+					break;
+				case "HomeZipCode":
+					homeAdr[4] = String(property.value).replace(/;/g,"\\;");
+					break;
+				case "HomeCountry":
+					homeAdr[5] = String(property.value).replace(/;/g,"\\;");
+					break;
+				//
+				// work address
+				//
+				case "WorkAddress2":
+					workAdr[0] = String(property.value).replace(/;/g,"\\;");
+					break;
+				case "WorkAddress":
+					workAdr[1] = String(property.value).replace(/;/g,"\\;");
+					break;
+				case "WorkCity":
+					workAdr[2] = String(property.value).replace(/;/g,"\\;");
+					break;
+				case "WorkState":
+					workAdr[3] = String(property.value).replace(/;/g,"\\;");
+					break;
+				case "WorkZipCode":
+					workAdr[4] = String(property.value).replace(/;/g,"\\;");
+					break;
+				case "WorkCountry":
+					workAdr[5] = String(property.value).replace(/;/g,"\\;");
+					break;
+				//
+				// phone number, home/work/fax/cell
+				//
+				case "HomePhone":
+					value = String(property.value);
+					if (value != "") { vcfstr += "TEL;HOME;VOICE:" + value + this.CRLF; }
+					break;
+				case "WorkPhone":
+					value = String(property.value);
+					if (value != "") { vcfstr += "TEL;WORK;VOICE:" + value + this.CRLF; }
+					break;
+				case "FaxNumber":
+					value = String(property.value);
+					if (value != "") { vcfstr += "TEL;FAX:" + value + this.CRLF; }
+					break;
+				case "CellularNumber":
+					value = String(property.value);
+					if (value != "") { vcfstr += "TEL;CELL:" + value + this.CRLF; }
+					break;
+				case "PagerNumber":
+					value = String(property.value);
+					if (value != "") { vcfstr += "TEL;PAGER:" + value + this.CRLF; }
+					break;
+				//
+				// job title
+				//
+				case "JobTitle":
+					value = String(property.value);
+					if (value != "") { vcfstr += "TITLE;CHARSET="+charset+":" + value + this.CRLF; }
+					break;
+				//
+				// department
+				//
+				case "Department":
+					department = String(property.value).replace(/;/g,"\\;");
+					break;
+				case "Company":
+					company = String(property.value).replace(/;/g,"\\;");
+					break;
+				//
+				// webpages
+				//
+				case "WebPage1":
+					value = String(property.value);
+					if (value != "") { vcfstr += "URL;TYPE=WORK:" + value + this.CRLF; }
+					break;
+				case "WebPage2":
+					value = String(property.value);
+					if (value != "") { vcfstr += "URL;TYPE=HOME:" + value + this.CRLF; }
+					break;
+				//
+				// birthday
+				//
+				case "BirthYear":
+					year = String(property.value);
+					break;
+				case "BirthMonth":
+					month = String(property.value);
+					break;
+				case "BirthDay":
+					day = String(property.value);
+					break;
+				//
+				// notes; single value of a contact which might hold a line
+				// break and might create a rather long line if not folded
+				//
+				case "Notes":
+					value = String(property.value);
+					if (value != "") {
+						if (value.indexOf("\n") != -1) {
+							// at least one line break is present: encoding needed
+							if (useQPE) {
+								// the user allows quoted printable: use it
+								tmpstr = "NOTE;CHARSET=" + charset + ";ENCODING=QUOTED-PRINTABLE:";
+								if (doFolding) {
+									// ...and folding is allowed, too!
+									vcfstr += tmpstr + this.foldQuotedPrintable(
+											this.toQuotedPrintable(value),
+											tmpstr.length
+										) + this.CRLF;
+								} else {
+									// ...but don't fold the line
+									vcfstr += tmpstr
+										+ this.toQuotedPrintable(value)
+										+ this.CRLF;
+								}
+							} else {
+								// fall back to base64 encoding
+								tmpstr = "NOTE;CHARSET=" + charset + ";ENCODING=BASE64:"
+								if (doFolding) {
+									// ...and folding is allowed, too!
+									vcfstr += tmpstr + this.foldBase64(
+											window.btoa(value),
+											tmpstr.length
+										) + this.CRLF + this.CRLF;
+								} else {
+									// ...but don't fold the line
+									vcfstr += tmpstr + window.btoa(value) + this.CRLF;
+								}
+							}
 						} else {
-							// ...but don't fold the line
-							vcfstr += tmpstr + window.btoa(value) + this.CRLF;
+							// encoding not needed
+							if (doFolding) {
+								// ...but we are allowed to fold it!
+								tmpstr = "NOTE;CHARSET=" + charset + ":" + value;
+								vcfstr += this.foldText(tmpstr) + this.CRLF;
+							} else {
+								// ...but don't fold the line
+								vcfstr += "NOTE;CHARSET=" + charset + ":" + value + this.CRLF;
+							}
 						}
 					}
-				} else {
-					// encoding not needed
-					if (doFolding) {
-						// ...but we are allowed to fold it!
-						tmpstr = "X-MOZILLA-PROPERTY;CHARSET=" + charset
-							+ ":" + this.otherProperties[i] + ";"+ value;
-						vcfstr += this.foldText(tmpstr) + this.CRLF;
-					} else {
-						// ...but don't fold the line
-						vcfstr += "X-MOZILLA-PROPERTY;CHARSET=" + charset
-							+ ":" + this.otherProperties[i] + ";"+ value
-							+ this.CRLF;
+					break;
+				//
+				// Messenger Information: AIM, GoogleTalk, Yahoo, Skype, MSN, ICQ, Jabber...
+				//
+				case "_AimScreenName":
+					value = String(property.value);
+					if (value != "") { vcfstr += "X-AIM:" + value + this.CRLF; }
+					break;
+				case "_GoogleTalk":
+					value = String(property.value);
+					if (value != "") { vcfstr += "X-GOOGLE-TALK:" + value + this.CRLF; }
+					break;
+				case "_Yahoo":
+					value = String(property.value);
+					if (value != "") { vcfstr += "X-YAHOO:" + value + this.CRLF; }
+					break;
+				case "_Skype":
+					value = String(property.value);
+					if (value != "") { vcfstr += "X-SKYPE:" + value + this.CRLF; }
+					break;
+				case "_MSN":
+					value = String(property.value);
+					if (value != "") { vcfstr += "X-MSN:" + value + this.CRLF; }
+					break;
+				case "_ICQ":
+					value = String(property.value);
+					if (value != "") { vcfstr += "X-ICQ:" + value + this.CRLF; }
+					break;
+				case "_JabberId":
+					value = String(property.value);
+					if (value != "") { vcfstr += "X-JABBER:" + value + this.CRLF; }
+					break;
+				//
+				// handle non-string properties
+				//
+				case "PopularityIndex":
+					vcfstr += "X-MOZILLA-PROPERTY;CHARSET=" + charset + ":PopularityIndex;" + String(property.value) + this.CRLF;
+					break;
+				case "PreferMailFormat":
+					vcfstr += "X-MOZILLA-PROPERTY;CHARSET=" + charset + ":PreferMailFormat;" + String(property.value) + this.CRLF;
+					break;
+				case "AllowRemoteContent":
+					vcfstr += "X-MOZILLA-PROPERTY;CHARSET=" + charset + ":AllowRemoteContent;" + String(property.value) + this.CRLF;
+					break;
+				//
+				// intercept photo properties
+				//
+				case "PhotoURI":
+					photoURI = String(property.value);
+					break;
+				case "PhotoType":
+					photoType = String(property.value);
+					break;
+				case "PhotoName":
+					photoName = String(property.value);
+					break;
+				//
+				// finally, store other information as X-MOZILLA-PROPERTY
+				//
+				default:
+					if (this.otherProperties.indexOf(property.name) > -1) {
+						// yes, property is known (in this.otherProperties)
+						var value = String(property.value).replace(/;/g,"\\;");
+						if (value != "") {
+							if (value.indexOf("\n") != -1) {
+								// at least one line break is present: encoding needed
+								if (useQPE) {
+									// the user allows quoted printable: use it
+									tmpstr = "X-MOZILLA-PROPERTY;CHARSET=" + charset + ";ENCODING=QUOTED-PRINTABLE:" + property.name + ";";
+									if (doFolding) {
+										// ...and folding is allowed, too!
+										vcfstr += tmpstr + this.foldQuotedPrintable(this.toQuotedPrintable(value),tmpstr.length) + this.CRLF;
+									} else {
+										// ...but don't fold the line
+										vcfstr += tmpstr + this.toQuotedPrintable(value) + this.CRLF;
+									}
+								} else {
+									// fall back to base64 encoding
+									tmpstr = "X-MOZILLA-PROPERTY;CHARSET=" + charset + ";ENCODING=BASE64:" + property.name + ";";
+									if (doFolding) {
+										// ...and folding is allowed, too!
+										vcfstr += tmpstr + this.foldBase64(window.btoa(value),tmpstr.length) + this.CRLF + this.CRLF;
+									} else {
+										// ...but don't fold the line
+										vcfstr += tmpstr + window.btoa(value) + this.CRLF;
+									}
+								}
+							} else {
+								// encoding not needed
+								if (doFolding) {
+									// ...but we are allowed to fold it!
+									tmpstr = "X-MOZILLA-PROPERTY;CHARSET=" + charset + ":" + property.name + ";"+ value;
+									vcfstr += this.foldText(tmpstr) + this.CRLF;
+								} else {
+									// ...but don't fold the line
+									vcfstr += "X-MOZILLA-PROPERTY;CHARSET=" + charset + ":" + property.name + ";"+ value + this.CRLF;
+								}
+							}
+						}
 					}
-				}
 			}
 		}
-		
-		switch (card.getProperty("PhotoType","")) {
+		//
+		// if lastname or firstname were defined, create name entry (N)
+		//
+		if (lastname.length > 0 || firstname.length > 0) {
+			vcfstr += "N;CHARSET="+charset+":"+lastname+";"+firstname+";;;"+this.CRLF;
+		}
+		//
+		// render non-empty address arrays into vCard ADR line
+		//
+		var strHomeAdr = homeAdr.join(";");
+		if (strHomeAdr.length > 5) {
+			vcfstr += "ADR;TYPE=HOME;CHARSET=" + charset + ":" + ";" + strHomeAdr + this.CRLF;
+		}
+		var strWorkAdr = workAdr.join(";");
+		if (strWorkAdr.length > 5) {
+			vcfstr += "ADR;TYPE=WORK;CHARSET=" + charset + ":" + ";" + strWorkAdr + this.CRLF;
+		}
+		//
+		// combine department and company information
+		//
+		if (department != "" || company != "") {
+			vcfstr += "ORG;CHARSET=" + charset + ":" + company + ";" + department + this.CRLF;
+		}
+		//
+		// handle birthday date
+		//
+		if (year.length >= 4 && month.length >= 2 && day.length >= 2) {
+			vcfstr += "BDAY:" + year.substr(0,4) + month.substr(0,2) + day.substr(0,2) + this.CRLF;
+		} else {
+			// incomplete date: store as X-MOZILLA properties
+			if (year != "") { vcfstr += "X-MOZILLA-PROPERTY:BirthYear;" + year + this.CRLF; }
+			if (month != "") { vcfstr += "X-MOZILLA-PROPERTY:BirthMonth;" + month + this.CRLF; }
+			if (day != "") { vcfstr += "X-MOZILLA-PROPERTY:BirthDay;" + day + this.CRLF; }
+		}
+		//
+		// construct photo data
+		//
+		switch (photoType) {
 			case "web":
-				var photoURI  = card.getProperty("PhotoURI","");
-				vcfstr += "PHOTO;VALUE=URL:" + photoURI + this.CRLF;
+				if (photoURI != "") { vcfstr += "PHOTO;VALUE=URL:" + photoURI + this.CRLF; }
 				break;
 			case "binary":
-				var photoData = card.getProperty("PhotoURI","");
-				var suffix = this.PhotoSuffixToType[
-					this.determinePhotoSuffix(
-						photoData.substr(0,8)
-					).toUpperCase()];
-				if (suffix != undefined) {
-					var photostr = "PHOTO;ENCODING=BASE64;TYPE=" + suffix + ":";
-					if (doFolding) {
-						vcfstr += photostr
-							+ this.foldBase64(
-								window.btoa(photoData),
-								photostr.length
-							) + this.CRLF + this.CRLF;
-					} else {
-						vcfstr += photostr
-							+ window.btoa(photoData)
-							+ this.CRLF;
+				if (photoURI != "") {
+					suffix = this.PhotoSuffixToType[this.determinePhotoSuffix(photoURI.substr(0,8)).toUpperCase()];
+					if (suffix != undefined) {
+						photoStr = "PHOTO;ENCODING=BASE64;TYPE=" + suffix + ":";
+						if (doFolding) {
+							vcfstr += photoStr + this.foldBase64(window.btoa(photoURI),photoStr.length) + this.CRLF + this.CRLF;
+						} else {
+							vcfstr += photoStr + window.btoa(photoData) + this.CRLF;
+						}
 					}
 				}
 				break;
 			case "file":
-				var photoName = card.getProperty("PhotoName","");
-				var photoData = this.readPhotoFromProfile(photoName);
-				var suffix = this.PhotoSuffixToType[
-					this.determinePhotoSuffix(
-						photoData.substr(0,8)
-					).toUpperCase()];
-				if (suffix != undefined) {
-					var photostr = "PHOTO;ENCODING=BASE64;TYPE=" + suffix + ":";
-					if (doFolding) {
-						vcfstr += photostr
-							+ this.foldBase64(
-								window.btoa(photoData),
-								photostr.length
-							) + this.CRLF + this.CRLF;
-					} else {
-						vcfstr += photostr
-							+ window.btoa(photoData)
-							+ this.CRLF;
+				if (photoName != "") {
+					photoData = this.readPhotoFromProfile(photoName);
+					suffix = this.PhotoSuffixToType[this.determinePhotoSuffix(photoData.substr(0,8)).toUpperCase()];
+					if (suffix != undefined) {
+						photoStr = "PHOTO;ENCODING=BASE64;TYPE=" + suffix + ":";
+						if (doFolding) {
+							vcfstr += photoStr + this.foldBase64(window.btoa(photoData),photoStr.length) + this.CRLF + this.CRLF;
+						} else {
+							vcfstr += photoStr + window.btoa(photoData) + this.CRLF;
+						}
 					}
 				}
-				break;
 		}
-		
 		vcfstr += "END:VCARD" + this.CRLF;
 		return vcfstr;
 	},
@@ -682,6 +793,9 @@ var ThunderSyncVCardLib = {
 			// technique specified in the vCard standard
 			tmp = tmp.replace(/\r\n([\s])/g,"$1");
 			
+			// unmaks all masked (escaped) characters, i.e. \; \, \\
+			tmp = tmp.replace(/\\(;|,|\\)/g,"$1");
+			
 			// finally, split the datastring at \r\n line breaks
 			var lines = tmp.split(this.CRLF);
 		} catch (exception) {
@@ -704,11 +818,31 @@ var ThunderSyncVCardLib = {
 				var posColon = lines[i].indexOf(":");
 				if (posColon == -1 ) { throw "undefined"; }
 				
-				property = lines[i].substr(0,posColon).split(";");
-				value = lines[i].substr(posColon+1).split(";");
-				//
-				// todo: handle masked semicolons (\;)
-				//
+				property = lines[i].substr(0,posColon).toUpperCase().split(";"); // case insensitive properties! -> toUpperCase
+				switch (property[0]) {
+					case "FN":
+					case "PHOTO":
+					case "BDAY":
+					case "TEL":
+					case "EMAIL":
+					case "TITLE":
+					case "NOTE":
+					case "URL":
+					case "REV":
+					case "UID":
+					case "VERSION":
+						// these properties only feature one value
+						// thus the value doesn't need to be split up
+						// (just in case the optional semi-colon masking is
+						// really interpreted as optional; otherwise we would
+						// miss the remainder of the field after the first ";")
+						value = [lines[i].substr(posColon+1)];
+						break;
+					default:
+						// property features multiple values (compound property)
+						// therefore, it is split up along semi-colons...
+						value = lines[i].substr(posColon+1).split(";");
+				}
 				for (var k = 1; k < property.length; k++) {
 					var prop = property[k].split("=");
 					switch (prop.length) {
@@ -894,10 +1028,42 @@ var ThunderSyncVCardLib = {
 				case "UID":
 					card.setProperty("UID",value[0]);
 					break;
+				case "X-AIM":
+					card.setProperty("_AimScreenName",value[0]);
+					break;
+				case "X-ICQ":
+					card.setProperty("_ICQ",value[0]);
+					break;
+				case "X-GOOGLE-TALK":
+					card.setProperty("_GoogleTalk",value[0]);
+					break;
+				case "X-JABBER":
+					card.setProperty("_JabberId",value[0]);
+					break;
+				case "X-MSN":
+					card.setProperty("_MSN",value[0]);
+					break;
+				case "X-YAHOO":
+					card.setProperty("_Yahoo",value[0]);
+					break;
+				case "X-SKYPE":
+					card.setProperty("_Skype",value[0]);
+					break;
 			}
 			i++;
 		}
 		return card;
+	},
+	
+	/**
+	 * Write a message to Thunderbird's error console
+	 * 
+	 * @param msg message string
+	 */
+	logMsg: function (msg) {
+		Components.classes["@mozilla.org/consoleservice;1"]
+			.getService(Components.interfaces.nsIConsoleService)
+			.logStringMessage("[ThunderSync/vCardLib] "+msg);
 	},
 	
 }

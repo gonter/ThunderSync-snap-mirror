@@ -24,7 +24,7 @@ along with ThunderSync; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 or see <http://www.gnu.org/licenses/>.
 
-$Id: ThunderSyncDialog.xul 40 2012-03-08 15:46:53Z frank $
+$Id: ThunderSyncDialog.xul 44 2013-06-13 17:56:18Z frank $
 -->
 
 <dialog id="ThunderSync.dialog.sync"
@@ -34,16 +34,14 @@ $Id: ThunderSyncDialog.xul 40 2012-03-08 15:46:53Z frank $
 	onload="ThunderSyncDialog.compare();"
 	buttons=",">
 	
-	<script type="application/x-javascript"
-		src="chrome://thundersync/content/ThunderSyncDialog.js" />
-	<script type="application/x-javascript"
-		src="chrome://thundersync/content/ThunderSyncVCardLib.js" />
+	<script type="application/x-javascript" src="chrome://thundersync/content/ThunderSyncDialog.js" />
+	<script type="application/x-javascript" src="chrome://thundersync/content/ThunderSyncVCardLib.js" />
 	
 	<dialogheader title="&ThunderSyncDialog.dialog.title;"
 		description="&ThunderSyncDialog.dialog.description;" />
 	
 	<stringbundleset id="ThunderSyncDialog.strings">
-		<stringbundle id="ThunderSyncDialog.strings.dlg" src="chrome://thundersync/locale/ThunderSyncDialog.properties"/>
+		<stringbundle id="ThunderSyncDialog.strings.dlg" src="chrome://thundersync/locale/ThunderSyncDialog.properties" />
 	</stringbundleset>
 	
 	<tree id="ThunderSyncDialog.tree"

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  * or see <http://www.gnu.org/licenses/>.
  *
- * $Id: ThunderSyncPreferences.js 40 2012-03-08 15:46:53Z frank $
+ * $Id: ThunderSyncPreferences.js 44 2013-06-13 17:56:18Z frank $
  */
 
 var ThunderSyncPref = {
@@ -36,6 +36,15 @@ var ThunderSyncPref = {
 	 */
 	
 	load: function () {
+		var selectedURI = "";
+		try {
+			// first try the wrappedJSObject trick for passing Javascript
+			// objects between windows when no intial window is available
+			// https://developer.mozilla.org/en-US/docs/Working_with_windows_in_chrome_code#Example_5.3A_Using_nsIWindowWatcher_for_passing_an_arbritrary_JavaScript_object
+			selectedURI = window.arguments[0].wrappedJSObject.selectedURI;
+		} catch (exception) {
+			// no wrappedJSObject trick: dialog is called without arguments
+		}
 		//
 		// access preferences system and prepare in-object storage
 		//
@@ -71,20 +80,20 @@ var ThunderSyncPref = {
 		// read all addressbooks, fill list in preferences dialog
 		//
 		var abManager = Components.classes["@mozilla.org/abmanager;1"].getService(Components.interfaces.nsIAbManager);
-		// var abManager = Components.classes["@mozilla.org/abmanager;1"].getService(Components.interfaces.nsIAbMDBDirectory);
 		var allAddressBooks = abManager.directories;
 		var ablist = document.getElementById("ThunderSyncPreferences.list.addressbook");
-
+		var selectedIndex = 0;
+		var index = 0;
 		while (allAddressBooks.hasMoreElements()) {
 			var addressBook = allAddressBooks.getNext();
-
 			if (addressBook instanceof Components.interfaces.nsIAbDirectory)
 			{
-				//var fileName = addressBook.fileName.replace(".mab","");
 				var fileName = addressBook.fileName;
-if (fileName == null) continue;
+				// null pointer fix by gonter <https://github.com/gonter>
+				// see https://github.com/gonter/ThunderSync-snap-mirror/commit/5a07fc6863d5c3c301cbedce966a57630f115cdc
+				if (fileName == null) { continue; }
 				fileName = fileName.replace(".mab","");
-
+				
 				var item = document.createElementNS(
 					"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
 					"listitem"
@@ -93,8 +102,7 @@ if (fileName == null) continue;
 				item.setAttribute("label",addressBook.dirName);
 				item.setAttribute("value",fileName);
 				item.setAttribute("class","ThunderSyncPreferences.listitem.addressbookname");
-ablist.appendChild(item);
-
+				
 				//
 				// store addressbook preferences
 				//
@@ -189,9 +197,10 @@ ablist.appendChild(item);
 				}
 				
 				ablist.appendChild(item);
+				if (addressBook.URI == selectedURI) { selectedIndex = index; }
+				index++;
 			}
 		}
-		
 		//
 		// populate filter tree
 		//
@@ -247,6 +256,8 @@ ablist.appendChild(item);
 			document.getElementById("ThunderSyncPreferences.list.addressbook").selectedIndex = 0;
 			document.getElementById("ThunderSyncPreferences.tree.filter").view.selection.select(0);
 			this.updateExportFormat();
+			// set addressbook list to predefined selection
+			ablist.selectedIndex = selectedIndex;
 		} catch (exception) {
 			// it seems there are no addressbooks: show alert and exit
 			var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
@@ -401,9 +412,8 @@ ablist.appendChild(item);
 		var stringsBundle = document.getElementById("ThunderSyncPreferences.strings.prf");
 		var items = document.getElementsByClassName("ThunderSyncPreferences.treeitem.filter");
 		for (i=0; i<items.length; i++) {
-			var property = items[i].getElementsByClassName("ThunderSyncPreferences.treecell.filterProperty")[0]
-						.getAttribute("value");
-			var itemAction   = items[i].getElementsByClassName("ThunderSyncPreferences.treecell.filterAction")[0];
+			var property = items[i].getElementsByClassName("ThunderSyncPreferences.treecell.filterProperty")[0].getAttribute("value");
+			var itemAction = items[i].getElementsByClassName("ThunderSyncPreferences.treecell.filterAction")[0];
 			if (filterList[property] && filterList[property] != itemAction.getAttribute("value")) {
 				itemAction.setAttribute("value",filterList[property]);
 				itemAction.setAttribute("label",stringsBundle.getString("filter"+filterList[property]));
@@ -573,7 +583,7 @@ ablist.appendChild(item);
 	 * Let the user choose a file and set it as path of the current addressbook
 	 */
 	openFileDialog: function () {
-		this.openPathDialog(Components.interfaces.nsIFilePicker.modeOpen);
+		this.openPathDialog(Components.interfaces.nsIFilePicker.modeSave); // 2013-06-06: changed to modeSave, so that files can be created, too
 	},
 	
 	/**
@@ -865,6 +875,6 @@ ablist.appendChild(item);
 				stringsBundle.getFormattedString("textNoCleanFoto",[photoDirPath])
 			);
 		}
-	}
+	},
 }
 
